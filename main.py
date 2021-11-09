@@ -8,7 +8,7 @@ import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 from train import train
-from test1 import train1
+# from test1 import train1
 from test import test
 from Net.UNet import UNet, UNet_vit
 # from Net.Mbcnn import MBCNN

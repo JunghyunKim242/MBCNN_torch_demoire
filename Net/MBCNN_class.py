@@ -12,16 +12,17 @@ class ScaleLayer2(nn.Module):
         self.ReLU = nn.ReLU()
         self.it_weights = nn.Parameter(torch.autograd.Variable(torch.ones((64, 1, 1, 1)),
                                                                requires_grad=True))
-        # print('ScaleLayer self.kernel.shape\t',self.kernel.shape)
+
     def forward(self, input):
-        y = input * self.it_weights
+        y = input.to('cuda') * self.it_weights
+        # print(self.it_weights[0,0,0,0])
         return self.ReLU(y)
 
     def compute_output_shape(self, input_shape):
         return input_shape
 
 
-class Kernell(nn.Module):
+class Kernel(nn.Module):
     def __init__(self):
         super().__init__()
         conv_shape = (64, 64, 1, 1)
@@ -44,6 +45,7 @@ class Kernell(nn.Module):
         self.kernel = torch.autograd.Variable(kernel)
 
     def forward(self):
+        # print(self.kernel)
         return self.kernel
 
     def compute_output_shape(self, input_shape):
@@ -54,10 +56,12 @@ class adaptive_implicit_trans(nn.Module):
         super().__init__()
         self.ReLU = nn.ReLU()
         self.it_weights = ScaleLayer2()
-        self.kernel = Kernell()
+        self.kernel = Kernel()
 
     def forward(self, inputs):
         self.kernel1 = self.it_weights(self.kernel())     # 출력도 kernel사이즈랑 동일
+        # print(self.kernel1)
+
         # self.it_weights = self.it_weights.type(torch.cuda.FloatTensor)
         # self.kernel = self.kernel.type(torch.cuda.FloatTensor)
         y = F.conv2d(inputs, self.kernel1)

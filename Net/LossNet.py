@@ -13,6 +13,7 @@ from torchvision import transforms
 import matplotlib.pyplot as plt
 import torchvision
 
+
 class L2_LOSS(nn.Module):
     """L1 Charbonnierloss."""
     def __init__(self):
@@ -35,7 +36,44 @@ class L1_LOSS(nn.Module):
         diff = torch.add(Ximage, -Ytarget)
         # square = torch.square(diff)
         abs = torch.abs(diff)
-        loss = torch.mean(abs) #/ Ximage.size(0)
+        loss = torch.sum(abs) / Ximage.size(0)
+        return loss
+
+
+class L1_Advanced_Sobel_Loss(nn.Module):
+    def __init__(self, device=torch.device('cuda')):
+        super().__init__()
+        self.device = device
+        self.conv_op_x = nn.Conv2d(3,3, 3, bias=False)
+        self.conv_op_y = nn.Conv2d(3,3, 3, bias=False)
+
+        sobel_kernel_x = np.array([[[2, 1, 0], [1, 0, -1], [0,-1, -2]],
+                                   [[2, 1, 0], [1, 0, -1], [0,-1, -2]],
+                                   [[2, 1, 0], [1, 0, -1], [0,-1, -2]]], dtype='float32')
+        sobel_kernel_y = np.array([[[0, 1, 2], [-1, 0, 1], [-2, -1, 0]],
+                                   [[0, 1, 2], [-1, 0, 1], [-2, -1, 0]],
+                                   [[0, 1, 2], [-1, 0, 1], [-2, -1, 0]]], dtype='float32')
+        sobel_kernel_x = sobel_kernel_x.reshape((1, 3, 3, 3))
+        sobel_kernel_y = sobel_kernel_y.reshape((1, 3, 3, 3))
+
+        self.conv_op_x.weight.data = torch.from_numpy(sobel_kernel_x).to(device)
+        self.conv_op_y.weight.data = torch.from_numpy(sobel_kernel_y).to(device)
+        self.conv_op_x.weight.requires_grad = False
+        self.conv_op_y.weight.requires_grad = False
+
+    # def forward(self, edge_outputs, image_target):
+    def forward(self, outputs, image_target):
+        edge_Y_xoutputs = self.conv_op_x(outputs)
+        edge_Y_youtputs = self.conv_op_y(outputs)
+        edge_Youtputs = torch.abs(edge_Y_xoutputs) + torch.abs(edge_Y_youtputs)
+
+        edge_Y_x = self.conv_op_x(image_target)
+        edge_Y_y = self.conv_op_y(image_target)
+        edge_Y = torch.abs(edge_Y_x) + torch.abs(edge_Y_y)
+
+        diff = torch.add(edge_Youtputs, -edge_Y)
+        error = torch.abs(diff)
+        loss = torch.sum(error) / outputs.size(0)
         return loss
 
 
@@ -76,44 +114,6 @@ class L1_Sobel_Loss(nn.Module):
         error = torch.abs(diff)
         loss = torch.sum(error) #/ outputs.size(0) #output.size(0)은 batch size
         return loss
-
-
-class L1_Advanced_Sobel_Loss(nn.Module):
-    def __init__(self, device=torch.device('cuda')):
-        super().__init__()
-        self.device = device
-        self.conv_op_x = nn.Conv2d(3,3, 3, bias=False)
-        self.conv_op_y = nn.Conv2d(3,3, 3, bias=False)
-
-        sobel_kernel_x = np.array([[[2, 1, 0], [1, 0, -1], [0,-1, -2]],
-                                   [[2, 1, 0], [1, 0, -1], [0,-1, -2]],
-                                   [[2, 1, 0], [1, 0, -1], [0,-1, -2]]], dtype='float32')
-        sobel_kernel_y = np.array([[[0, 1, 2], [-1, 0, 1], [-2, -1, 0]],
-                                   [[0, 1, 2], [-1, 0, 1], [-2, -1, 0]],
-                                   [[0, 1, 2], [-1, 0, 1], [-2, -1, 0]]], dtype='float32')
-        sobel_kernel_x = sobel_kernel_x.reshape((1, 3, 3, 3))
-        sobel_kernel_y = sobel_kernel_y.reshape((1, 3, 3, 3))
-
-        self.conv_op_x.weight.data = torch.from_numpy(sobel_kernel_x).to(device)
-        self.conv_op_y.weight.data = torch.from_numpy(sobel_kernel_y).to(device)
-        self.conv_op_x.weight.requires_grad = False
-        self.conv_op_y.weight.requires_grad = False
-
-    # def forward(self, edge_outputs, image_target):
-    def forward(self, outputs, image_target):
-        edge_Y_xoutputs = self.conv_op_x(outputs)
-        edge_Y_youtputs = self.conv_op_y(outputs)
-        edge_Youtputs = torch.abs(edge_Y_xoutputs) + torch.abs(edge_Y_youtputs)
-
-        edge_Y_x = self.conv_op_x(image_target)
-        edge_Y_y = self.conv_op_y(image_target)
-        edge_Y = torch.abs(edge_Y_x) + torch.abs(edge_Y_y)
-
-        diff = torch.add(edge_Youtputs, -edge_Y)
-        error = torch.abs(diff)
-        loss = torch.mean(error)# / outputs.size(0)
-        return loss
-
 
 
 class edge_making(nn.Module):

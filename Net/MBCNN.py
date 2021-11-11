@@ -1,12 +1,8 @@
 
 import torch
 import torch.nn as nn
-# from torch import nn
 import torch.nn.functional as F
-# from ops import *
-# from .UNet_class import *
-from Net.MBCNN_class_2 import *
-# from torch.nn import PixelShuffle
+from Net.MBCNN_class import *
 import torch.nn.functional as F
 
 
@@ -20,7 +16,6 @@ class MBCNN(nn.Module):
 
         self.conv_func1 = conv_relu1(12, nFilters * 2, 3, padding=1)
         self.pre_block1 = pre_block((1, 2, 3, 2, 1))
-
         self.conv_func2 = conv_relu1(128, nFilters * 2, 3, padding=0, stride=2)
         self.pre_block2 = pre_block((1, 2, 3, 2, 1))
 

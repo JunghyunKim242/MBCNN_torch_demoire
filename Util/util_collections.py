@@ -38,8 +38,6 @@ def adjust_learning_rate(optimizer, epoch):
 
 
 def tensor2im(input_image, imtype=np.uint8):
-    # print('input_image.type()',input_image.type())
-    # print('type(input_image)',type(input_image))
 
     if isinstance(input_image, torch.Tensor):
         image_tensor = input_image.detach() # true
@@ -47,20 +45,21 @@ def tensor2im(input_image, imtype=np.uint8):
         return input_image
 
     image_numpy = image_tensor.cpu().float().numpy()
-    # image_numpy = np.swapaxes(image_numpy, -3,-2)
-    # image_numpy = np.swapaxes(image_numpy, -2,-1)
+    image_numpy = np.swapaxes(image_numpy, -3,-2)
+    image_numpy = np.swapaxes(image_numpy, -2,-1)
+
     # image_numpy = image_numpy * 255
 
-    # print('type(image_numpy)',type(image_numpy))
-    # print(image_numpy)
     #simage_numpy = (image_numpy + 1.0) / 2.0
 
     return image_numpy
 
 
 def PSNR(original, contrast): # metrics.peak_signal_noise_ratio랑 동일
+
     original = original*255.
     contrast = contrast*255.
+
     mse = np.mean((original - contrast) ** 2)
     if mse == 0:
         return 100
@@ -70,9 +69,8 @@ def PSNR(original, contrast): # metrics.peak_signal_noise_ratio랑 동일
 
 
 def save_single_image(img, img_path):
-    # print('np.shape(img1)',np.shape(img))
     # img = np.transpose(img, (1, 2, 0))
-    # print('np.shape(img)',np.shape(img))
+
     if np.shape(img)[-1] ==1:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -80,7 +78,6 @@ def save_single_image(img, img_path):
     # img = cv2.resize(img, dsize=( 1170,2532 ), interpolation=cv2.INTER_NEAREST )
     # img = cv2.resize(img, dsize=( 1080,2340 ), interpolation=cv2.INTER_NEAREST )
     img = img * 255
-    # print(img)
 
     cv2.imwrite(img_path, img)
     # return img
